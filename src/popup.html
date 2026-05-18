@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChatGPT Speed Trim</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="topbar">
+        <div>
+          <h1>ChatGPT Speed Trim</h1>
+        </div>
+        <span class="version-tag">v0.1</span>
+      </header>
+
+      <section class="panel intro" aria-label="Extension summary">
+        <p class="intro-title">Conversation performance</p>
+        <p class="intro-copy">Reduce rendering load in long threads while keeping older messages recoverable.</p>
+      </section>
+
+      <section class="panel controls" aria-label="Optimizer settings">
+        <label class="setting" for="enabled">
+          <span class="setting-copy">
+            <strong>Optimizer</strong>
+            <small>Enable conversation trimming in supported tabs</small>
+          </span>
+          <span class="switch-wrap">
+            <input id="enabled" type="checkbox" />
+            <span class="switch-ui" aria-hidden="true"></span>
+          </span>
+        </label>
+
+        <label class="setting" for="messageLimit">
+          <span class="setting-copy">
+            <strong>Visible messages</strong>
+            <small>How many recent messages stay rendered by default</small>
+          </span>
+          <div class="limit-wrap">
+            <input id="messageLimit" type="number" min="5" max="200" step="1" />
+            <span class="limit-unit">messages</span>
+          </div>
+        </label>
+      </section>
+
+      <section class="panel status" aria-live="polite">
+        <div class="status-head">
+          <h2>Live status</h2>
+          <span class="status-dot" aria-hidden="true"></span>
+        </div>
+        <p id="stats" class="status-value">Rendered: --</p>
+        <p class="status-note">Reads stats from the active ChatGPT tab.</p>
+      </section>
+
+      <p class="privacy">No conversation content is sent outside the page by default.</p>
+    </main>
+    <script src="../dist/popup.js"></script>
+  </body>
+</html>

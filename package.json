@@ -1,0 +1,18 @@
+{
+  "name": "chatgpt-speed-trim",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.29",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,243 @@
+:root {
+  --color-bg: #f3f5f9;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #fafbfe;
+  --color-text: #242424;
+  --color-text-subtle: #616161;
+  --color-stroke: #d1d1d1;
+  --color-stroke-subtle: #e6e6e6;
+  --color-brand: #0f6cbd;
+  --color-brand-hover: #115ea3;
+  --color-brand-soft: #e8f2fc;
+  --color-success: #107c10;
+  --color-focus: #0f6cbd;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 360px;
+  color: var(--color-text);
+  font-family: "Segoe UI Variable", "Segoe UI", "Inter", sans-serif;
+  background:
+    radial-gradient(160px 90px at 0% 0%, #e5f0fb 0%, transparent 72%),
+    linear-gradient(180deg, #f8f9fc 0%, var(--color-bg) 100%);
+}
+
+.popup {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+
+h1 {
+  margin: 3px 0 0;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.version-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #c7e0f4;
+  background: var(--color-brand-soft);
+  color: var(--color-brand-hover);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-stroke-subtle);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 6px 20px rgba(0, 0, 0, 0.04);
+}
+
+.intro {
+  background: linear-gradient(180deg, #ffffff 0%, var(--color-surface-subtle) 100%);
+}
+
+.intro-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.intro-copy {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.controls {
+  display: grid;
+  gap: 12px;
+}
+
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.setting-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.setting-copy strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.setting-copy small {
+  color: var(--color-text-subtle);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.switch-wrap {
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 24px;
+}
+
+#enabled {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.switch-ui {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d0d0d0;
+  transition: background-color 120ms ease;
+}
+
+.switch-ui::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+  transition: transform 120ms ease;
+}
+
+#enabled:checked + .switch-ui {
+  background: var(--color-brand);
+}
+
+#enabled:checked + .switch-ui::before {
+  transform: translateX(20px);
+}
+
+.limit-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 126px;
+}
+
+#messageLimit {
+  width: 78px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-stroke);
+  background: #ffffff;
+  color: var(--color-text);
+  padding: 0 9px;
+  font: 600 13px/1 "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+#messageLimit:hover {
+  border-color: #b7b7b7;
+}
+
+.limit-unit {
+  font-size: 11px;
+  color: var(--color-text-subtle);
+}
+
+.status-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.status h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 0 4px rgba(16, 124, 16, 0.14);
+}
+
+.status-value {
+  margin: 0;
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #c7e0f4;
+  background: var(--color-brand-soft);
+  color: var(--color-brand-hover);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--color-text-subtle);
+}
+
+input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.privacy {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--color-text-subtle);
+  text-align: center;
+  padding: 1px 4px 0;
+}
