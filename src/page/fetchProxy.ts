@@ -1,5 +1,5 @@
 import { MESSAGE_TYPES } from "../shared/constants";
-import type { ExtSettingsV1, TrimStats } from "../shared/schema";
+import type { ExtSettingsV1, PageStatusEvent, TrimStats } from "../shared/schema";
 import { getExtraMessages, readRuntimeState, setExtraMessages, writeRuntimeState } from "./runtimeState";
 import { trimConversation } from "./trim/trimConversation";
 import type { ConversationPayload as TrimConversationPayload, MappingNode } from "./trim/trimConversation";
@@ -17,7 +17,7 @@ type ConversationMatch = {
 
 const ALLOWED_HOSTS = ["chatgpt.com", "chat.openai.com"];
 const BACKEND_PREFIX = "/backend-api/";
-const CONVERSATION_PATH_PATTERN = /\/conversations?(\/|$)/;
+const CONVERSATION_PATH_PATTERN = /\/conversation\/[^/]+\/?$/;
 let activeSettings: ExtSettingsV1 | null = null;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -36,7 +36,7 @@ const isMappingNode = (value: unknown): value is MappingNode => {
     return false;
   }
 
-  if (typeof value.message === "undefined") {
+  if (value.message === null || typeof value.message === "undefined") {
     return true;
   }
 
@@ -166,6 +166,11 @@ const postStats = (stats: TrimStats): void => {
   });
 };
 
+const postStatus = (state: PageStatusEvent["state"]): void => {
+  const payload: PageStatusEvent = { state, timestamp: Date.now() };
+  window.postMessage({ type: MESSAGE_TYPES.pageStatus, payload }, "*");
+};
+
 export const isConversationGet = (request: RequestInfo | URL, init?: RequestInit): boolean => {
   const method = (init?.method ?? (request instanceof Request ? request.method : "GET")).toUpperCase();
   if (method !== "GET") {
@@ -181,8 +186,35 @@ export const isConversationGet = (request: RequestInfo | URL, init?: RequestInit
     && CONVERSATION_PATH_PATTERN.test(parsed.pathname);
 };
 
+export type ConversationTransformResult =
+  | { state: "disabled"; body: unknown; stats: null }
+  | { state: "unsupported"; body: unknown; stats: null }
+  | { state: "active"; body: Record<string, unknown>; stats: TrimStats };
+
+export const transformConversationBody = (
+  body: unknown,
+  settings: ExtSettingsV1,
+  extraMessages: number
+): ConversationTransformResult => {
+  if (!settings.enabled) {
+    return { state: "disabled", body, stats: null };
+  }
+  if (!isRecord(body)) {
+    return { state: "unsupported", body, stats: null };
+  }
+
+  const match = pickConversationPayload(body);
+  if (!match) {
+    return { state: "unsupported", body, stats: null };
+  }
+
+  const { payload, stats } = trimConversation(match.payload, settings.messageLimit, extraMessages);
+  return { state: "active", body: match.apply(payload), stats };
+};
+
 export const installFetchProxy = (settings: ExtSettingsV1): void => {
   activeSettings = settings;
+  postStatus(settings.enabled ? "waiting" : "disabled");
 
   if ((window as Window & { __CGPT_OPTIMIZER_PATCHED__?: boolean }).__CGPT_OPTIMIZER_PATCHED__) {
     return;
@@ -200,20 +232,10 @@ export const installFetchProxy = (settings: ExtSettingsV1): void => {
 
     try {
       const json = await response.clone().json() as unknown;
-      if (!isRecord(json)) {
-        debugLog(currentSettings, "Skip trim: response is not an object");
-        return response;
-      }
-
-      const match = pickConversationPayload(json);
-      if (!match) {
-        debugLog(currentSettings, "Skip trim: no compatible conversation payload", json);
-        return response;
-      }
-
       let extraMessages = getExtraMessages();
       const runtime = readRuntimeState();
-      const incomingConversationId = match.payload.conversation_id ?? null;
+      let result = transformConversationBody(json, currentSettings, extraMessages);
+      const incomingConversationId = result.state === "active" ? result.stats.conversationId : null;
       if (
         runtime.conversationId
         && incomingConversationId
@@ -222,26 +244,33 @@ export const installFetchProxy = (settings: ExtSettingsV1): void => {
       ) {
         setExtraMessages(0);
         extraMessages = 0;
+        result = transformConversationBody(json, currentSettings, extraMessages);
         debugLog(currentSettings, "Reset extraMessages for new conversation", {
           previousConversationId: runtime.conversationId,
           conversationId: incomingConversationId
         });
       }
 
-      const { payload, stats } = trimConversation(match.payload, currentSettings.messageLimit, extraMessages);
-      postStats(stats);
+      if (result.state !== "active") {
+        postStatus(result.state);
+        debugLog(currentSettings, "Skip trim: no compatible conversation payload");
+        return response;
+      }
+
+      postStats(result.stats);
       debugLog(currentSettings, "Trim applied", {
-        conversationId: stats.conversationId,
-        visibleKept: stats.visibleKept,
-        visibleTotal: stats.visibleTotal
+        conversationId: result.stats.conversationId,
+        visibleKept: result.stats.visibleKept,
+        visibleTotal: result.stats.visibleTotal
       });
 
-      return new Response(JSON.stringify(match.apply(payload)), {
+      return new Response(JSON.stringify(result.body), {
         status: response.status,
         statusText: response.statusText,
         headers: response.headers
       });
     } catch (error) {
+      postStatus("error");
       debugLog(currentSettings, "Trim failed", error);
       return response;
     }

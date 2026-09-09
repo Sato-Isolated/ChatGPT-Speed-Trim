@@ -1,5 +1,7 @@
-import { MAX_MESSAGE_LIMIT, MIN_MESSAGE_LIMIT } from "../shared/constants";
+import { MAX_MESSAGE_LIMIT, MESSAGE_TYPES, MIN_MESSAGE_LIMIT } from "../shared/constants";
+import type { ExtSettingsV1, PageRuntimeStatus } from "../shared/schema";
 import { getSettings, saveSettings } from "../shared/storage";
+import { describePageStatus, mergeSettings } from "./model";
 
 const SUPPORTED_GPT_HOSTS = ["chatgpt.com", "chat.openai.com"];
 
@@ -25,37 +27,51 @@ const isSupportedGptTab = (url: string | undefined): boolean => {
   }
 };
 
-const refreshStats = async (): Promise<void> => {
+let activeChatGptTabId: number | null = null;
+
+const setStatus = (value: string, note: string, tone: string): void => {
+  q<HTMLParagraphElement>("stats").textContent = value;
+  q<HTMLParagraphElement>("statusNote").textContent = note;
+  q<HTMLSpanElement>("statusDot").dataset.tone = tone;
+};
+
+const refreshStatus = async (): Promise<void> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const statsNode = q<HTMLParagraphElement>("stats");
+  activeChatGptTabId = null;
 
   if (!tab?.id) {
-    statsNode.textContent = "Rendered: no active tab";
+    setStatus("No active tab", "Open a ChatGPT conversation to use the optimizer.", "neutral");
     return;
   }
 
   if (!isSupportedGptTab(tab.url)) {
-    statsNode.textContent = "Rendered: open ChatGPT tab";
+    setStatus("Open a ChatGPT tab", "The optimizer only runs on supported ChatGPT pages.", "neutral");
     return;
   }
+  activeChatGptTabId = tab.id;
 
-  const response = await chrome.tabs.sendMessage(tab.id, { type: "GET_PAGE_STATS" }).catch(() => null);
-  const stats = response?.data;
-  statsNode.textContent = stats
-    ? `Rendered: ${stats.visibleKept}/${stats.visibleTotal}`
-    : "Rendered: ChatGPT detected (reload tab once)";
+  const response = await chrome.tabs.sendMessage(tab.id, { type: MESSAGE_TYPES.getPageStatus }).catch(() => null);
+  const status = response?.data as PageRuntimeStatus | undefined;
+  const view = status
+    ? describePageStatus(status)
+    : describePageStatus({ hookReady: false, state: "waiting", stats: null, timestamp: Date.now() });
+  setStatus(view.value, view.note, view.tone);
 };
 
 const wireSettings = async (): Promise<void> => {
-  const settings = await getSettings();
+  let settings: ExtSettingsV1 = await getSettings();
   const enabled = q<HTMLInputElement>("enabled");
   const messageLimit = q<HTMLInputElement>("messageLimit");
+  const reloadButton = q<HTMLButtonElement>("reloadChatGpt");
 
   enabled.checked = settings.enabled;
   messageLimit.value = String(settings.messageLimit);
 
   enabled.addEventListener("change", async () => {
-    await saveSettings({ ...settings, enabled: enabled.checked });
+    settings = mergeSettings(settings, { enabled: enabled.checked });
+    await saveSettings(settings);
+    reloadButton.hidden = false;
+    await refreshStatus();
   });
 
   messageLimit.addEventListener("change", async () => {
@@ -64,13 +80,27 @@ const wireSettings = async (): Promise<void> => {
       ? Math.max(MIN_MESSAGE_LIMIT, Math.min(MAX_MESSAGE_LIMIT, parsed))
       : settings.messageLimit;
     messageLimit.value = String(safe);
-    await saveSettings({ ...settings, messageLimit: safe });
+    settings = mergeSettings(settings, { messageLimit: safe });
+    await saveSettings(settings);
+    reloadButton.hidden = false;
+    await refreshStatus();
+  });
+
+  reloadButton.addEventListener("click", async () => {
+    if (activeChatGptTabId === null) {
+      await refreshStatus();
+      return;
+    }
+    reloadButton.disabled = true;
+    reloadButton.textContent = "Reloading…";
+    await chrome.tabs.reload(activeChatGptTabId);
+    window.close();
   });
 };
 
 const main = async (): Promise<void> => {
   await wireSettings();
-  await refreshStats();
+  await refreshStatus();
 };
 
 void main();

@@ -14,6 +14,8 @@ export const DEFAULT_SETTINGS: ExtSettingsV1 = {
 
 export const MESSAGE_TYPES = {
   pageStats: "CGPT_OPTIMIZER_PAGE_STATS",
+  pageStatus: "CGPT_OPTIMIZER_PAGE_STATUS",
   pageSettings: "CGPT_OPTIMIZER_PAGE_SETTINGS",
-  pageSettingsRequest: "CGPT_OPTIMIZER_PAGE_SETTINGS_REQUEST"
+  pageSettingsRequest: "CGPT_OPTIMIZER_PAGE_SETTINGS_REQUEST",
+  getPageStatus: "GET_PAGE_STATUS"
 } as const;

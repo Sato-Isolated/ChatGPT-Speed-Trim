@@ -205,8 +205,23 @@ h1 {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+  background: #8a8886;
+  box-shadow: 0 0 0 4px rgba(138, 136, 134, 0.14);
+}
+
+.status-dot[data-tone="success"] {
   background: var(--color-success);
   box-shadow: 0 0 0 4px rgba(16, 124, 16, 0.14);
+}
+
+.status-dot[data-tone="warning"] {
+  background: #986f0b;
+  box-shadow: 0 0 0 4px rgba(152, 111, 11, 0.14);
+}
+
+.status-dot[data-tone="error"] {
+  background: #c50f1f;
+  box-shadow: 0 0 0 4px rgba(197, 15, 31, 0.14);
 }
 
 .status-value {
@@ -226,6 +241,27 @@ h1 {
   font-size: 11px;
   line-height: 1.35;
   color: var(--color-text-subtle);
+}
+
+.reload-button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--color-brand);
+  color: #ffffff;
+  cursor: pointer;
+  font: 600 12px/1.2 "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+.reload-button:hover {
+  background: var(--color-brand-hover);
+}
+
+.reload-button:disabled {
+  cursor: progress;
+  opacity: 0.7;
 }
 
 input:focus-visible {

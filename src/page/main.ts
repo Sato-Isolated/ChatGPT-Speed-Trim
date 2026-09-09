@@ -5,6 +5,9 @@ import { installFetchProxy } from "./fetchProxy";
 let didReceiveSettings = false;
 
 window.addEventListener("message", (event) => {
+  if (event.source !== window) {
+    return;
+  }
   const message = event.data;
   if (!message || message.type !== MESSAGE_TYPES.pageSettings || !message.payload) {
     return;

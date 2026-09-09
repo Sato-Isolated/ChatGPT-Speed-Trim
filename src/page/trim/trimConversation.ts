@@ -8,7 +8,7 @@ export type MappingNode = {
     id?: string;
     author?: { role?: string };
     content?: { parts?: unknown[] };
-  };
+  } | null;
 };
 
 export type ConversationPayload = {
@@ -23,7 +23,9 @@ const isMeaningfulNode = (node: MappingNode | undefined): boolean => {
   }
   const role = node.message.author?.role;
   const parts = node.message.content?.parts;
-  const hasContent = Array.isArray(parts) && parts.some((part) => typeof part === "string" && part.trim().length > 0);
+  const hasContent = Array.isArray(parts) && parts.some((part) => (
+    typeof part === "string" ? part.trim().length > 0 : part !== null && typeof part !== "undefined"
+  ));
   if (role === "system") {
     return true;
   }

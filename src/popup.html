@@ -47,10 +47,11 @@
       <section class="panel status" aria-live="polite">
         <div class="status-head">
           <h2>Live status</h2>
-          <span class="status-dot" aria-hidden="true"></span>
+          <span id="statusDot" class="status-dot" data-tone="neutral" aria-hidden="true"></span>
         </div>
         <p id="stats" class="status-value">Rendered: --</p>
-        <p class="status-note">Reads stats from the active ChatGPT tab.</p>
+        <p id="statusNote" class="status-note">Reads stats from the active ChatGPT tab.</p>
+        <button id="reloadChatGpt" class="reload-button" type="button" hidden>Reload ChatGPT to apply</button>
       </section>
 
       <p class="privacy">No conversation content is sent outside the page by default.</p>

@@ -24,6 +24,20 @@ export interface TrimStats {
   timestamp: number;
 }
 
+export type PageRuntimeState = "waiting" | "active" | "unsupported" | "error" | "disabled";
+
+export interface PageRuntimeStatus {
+  hookReady: boolean;
+  state: PageRuntimeState;
+  stats: TrimStats | null;
+  timestamp: number;
+}
+
+export interface PageStatusEvent {
+  state: Exclude<PageRuntimeState, "active">;
+  timestamp: number;
+}
+
 export interface BgResponse<T> {
   ok: boolean;
   data?: T;
